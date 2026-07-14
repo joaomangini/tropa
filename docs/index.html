@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tropa — Mercado de Gado · Paraguai</title>
+<style>
+  :root{
+    --ground:#e9e5d8; --surface:#faf8f2; --surface-2:#f1ede2;
+    --ink:#21241c; --muted:#6b6d5d; --line:#d8d3c4;
+    --pasture:#3a6b3d; --pasture-deep:#274a2b; --pasture-soft:#e3ead9;
+    --tierra:#a8482b; --amber:#c68a24; --band:#31502f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --ground:#141610; --surface:#1e2018; --surface-2:#252820;
+      --ink:#eceadd; --muted:#9a9c86; --line:#33362a;
+      --pasture:#83b183; --pasture-deep:#a7cba7; --pasture-soft:#232b1f;
+      --tierra:#d6795a; --amber:#e0b24d; --band:#26331f;
+    }
+  }
+  :root[data-theme="light"]{
+    --ground:#e9e5d8; --surface:#faf8f2; --surface-2:#f1ede2;
+    --ink:#21241c; --muted:#6b6d5d; --line:#d8d3c4;
+    --pasture:#3a6b3d; --pasture-deep:#274a2b; --pasture-soft:#e3ead9;
+    --tierra:#a8482b; --amber:#c68a24; --band:#31502f;
+  }
+  :root[data-theme="dark"]{
+    --ground:#141610; --surface:#1e2018; --surface-2:#252820;
+    --ink:#eceadd; --muted:#9a9c86; --line:#33362a;
+    --pasture:#83b183; --pasture-deep:#a7cba7; --pasture-soft:#232b1f;
+    --tierra:#d6795a; --amber:#e0b24d; --band:#26331f;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{ margin:0; background:var(--ground); color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55; }
+  .wrap{ max-width:760px; margin:0 auto; padding:0 20px; }
+  .eyebrow{ text-transform:uppercase; letter-spacing:.14em; font-size:11.5px;
+    font-weight:700; color:var(--tierra); }
+  h2{ font-size:22px; line-height:1.15; margin:6px 0 4px; text-wrap:balance;
+    letter-spacing:-.01em; }
+  .lead{ color:var(--muted); font-size:15px; margin-bottom:18px; }
+  section{ padding:34px 0; border-top:1px solid var(--line); }
+  section:first-of-type{ border-top:0; }
+
+  .hero{ background:var(--band); color:#f2efe4; padding:52px 0 46px;
+    border-bottom:3px solid var(--amber); }
+  .hero .kick{ text-transform:uppercase; letter-spacing:.28em; font-size:11px;
+    font-weight:700; color:var(--amber); }
+  .hero h1{ font-size:clamp(46px,15vw,84px); line-height:.92; margin:10px 0 14px;
+    letter-spacing:-.03em; font-weight:800; }
+  .hero p{ font-size:clamp(16px,4.6vw,20px); max-width:30ch; color:#e6e2d4; margin:0; }
+  .hero .foot{ margin-top:26px; display:flex; flex-wrap:wrap; gap:8px; }
+  .hero .foot span{ font-size:12.5px; border:1px solid rgba(255,255,255,.28);
+    color:#e6e2d4; padding:5px 12px; border-radius:2px; }
+
+  .steps{ display:grid; gap:14px; }
+  @media(min-width:560px){ .steps{ grid-template-columns:repeat(3,1fr); } }
+  .step{ background:var(--surface); border:1px solid var(--line); padding:18px 16px;
+    border-radius:4px; }
+  .step .num{ font-variant-numeric:tabular-nums; font-weight:800; font-size:13px;
+    color:var(--pasture); letter-spacing:.1em; }
+  .step b{ display:block; margin:8px 0 3px; font-size:16px; }
+  .step p{ margin:0; font-size:13.5px; color:var(--muted); }
+
+  .ficha{ background:var(--surface); border:1px solid var(--line); border-radius:4px;
+    overflow:hidden; }
+  .row{ display:flex; justify-content:space-between; gap:16px; align-items:baseline;
+    padding:12px 16px; border-top:1px solid var(--line); }
+  .row:first-child{ border-top:0; }
+  .row .k{ font-weight:600; font-size:14.5px; }
+  .row .v{ color:var(--muted); font-size:13.5px; text-align:right; }
+
+  .cards{ display:grid; gap:16px; }
+  @media(min-width:560px){ .cards{ grid-template-columns:repeat(2,1fr); } }
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:6px;
+    overflow:hidden; display:flex; flex-direction:column; }
+  .card .band{ height:92px; position:relative; display:flex; align-items:flex-end;
+    padding:10px 12px; }
+  .card .band .glyph{ position:absolute; right:8px; top:-6px; font-size:64px;
+    opacity:.28; filter:grayscale(.2); }
+  .card .band .cat{ background:rgba(0,0,0,.34); color:#fff; font-size:11px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.08em; padding:4px 9px; border-radius:2px;
+    position:relative; z-index:1; }
+  .b1{background:#4c7a4f;} .b2{background:#8a6a3c;} .b3{background:#5b7488;}
+  .b4{background:#a06a3a;} .b5{background:#6f8a45;} .b6{background:#9a5a44;}
+  .card .body{ padding:13px 15px 16px; display:flex; flex-direction:column; gap:8px; flex:1; }
+  .card h3{ margin:0; font-size:15.5px; line-height:1.25; }
+  .card .breed{ font-size:12.5px; color:var(--muted); }
+  .card .stats{ display:flex; gap:14px; font-size:12.5px; color:var(--muted);
+    font-variant-numeric:tabular-nums; border-top:1px dashed var(--line); padding-top:9px; }
+  .card .stats b{ color:var(--ink); font-weight:600; display:block; }
+  .card .price{ margin-top:auto; font-size:18px; font-weight:800; color:var(--pasture);
+    font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+  .card .price small{ font-weight:500; font-size:12px; color:var(--muted); }
+  .card .place{ font-size:12.5px; color:var(--muted); }
+
+  .note{ font-size:12.5px; color:var(--muted); margin-bottom:16px; }
+
+  .acts{ display:grid; gap:1px; background:var(--line); border:1px solid var(--line);
+    border-radius:4px; overflow:hidden; }
+  @media(min-width:560px){ .acts{ grid-template-columns:1fr 1fr; } }
+  .act{ background:var(--surface); padding:15px 16px; }
+  .act b{ font-size:15px; } .act p{ margin:3px 0 0; font-size:13px; color:var(--muted); }
+
+  .tags{ display:flex; flex-wrap:wrap; gap:8px; }
+  .tag{ background:var(--surface); border:1px solid var(--line); padding:6px 13px;
+    border-radius:2px; font-size:14px; }
+  .tags.small .tag{ font-size:13px; }
+  .sub-l{ text-transform:uppercase; letter-spacing:.1em; font-size:11px; font-weight:700;
+    color:var(--muted); margin:18px 0 9px; }
+
+  .gean{ background:var(--pasture-soft); border:1px solid var(--pasture);
+    border-left-width:4px; border-radius:4px; padding:22px 22px; }
+  .gean h2{ margin-top:0; }
+  .gean ul{ margin:12px 0 0; padding-left:18px; }
+  .gean li{ margin-bottom:8px; font-size:14.5px; }
+  .gean li b{ color:var(--tierra); }
+
+  footer{ padding:30px 0 46px; color:var(--muted); font-size:12.5px; text-align:center; }
+  footer .brand{ font-weight:800; letter-spacing:-.01em; color:var(--ink); }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="kick">Mercado de gado · Paraguai</div>
+    <h1>TROPA</h1>
+    <p>Onde o produtor anuncia o lote e o comprador acha, filtra e fecha — direto pelo WhatsApp.</p>
+    <div class="foot">
+      <span>Abre no celular, sem instalar</span>
+      <span>Español · Português</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section>
+    <div class="eyebrow">Como funciona</div>
+    <h2>Três passos, do anúncio ao negócio</h2>
+    <p class="lead">Nada de complicação — o fluxo inteiro cabe numa frase.</p>
+    <div class="steps">
+      <div class="step"><div class="num">01</div><b>O vendedor anuncia</b><p>Cadastra o lote com fotos, preço e todos os dados do gado.</p></div>
+      <div class="step"><div class="num">02</div><b>O comprador procura</b><p>Filtra por categoria, raça, preço, peso e região.</p></div>
+      <div class="step"><div class="num">03</div><b>Falam no WhatsApp</b><p>Um toque abre a conversa direto com o vendedor.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">A ficha do lote</div>
+    <h2>O que cada anúncio guarda</h2>
+    <p class="lead">Tudo que um comprador de gado quer saber antes de fechar:</p>
+    <div class="ficha">
+      <div class="row"><span class="k">Categoria</span><span class="v">Boi · Vaca · Novilha · Bezerro · Touro · Matriz</span></div>
+      <div class="row"><span class="k">Raça</span><span class="v">Nelore, Brangus, Angus…</span></div>
+      <div class="row"><span class="k">Quantidade</span><span class="v">Cabeças no lote</span></div>
+      <div class="row"><span class="k">Peso médio</span><span class="v">Em quilos</span></div>
+      <div class="row"><span class="k">Idade média</span><span class="v">Em meses</span></div>
+      <div class="row"><span class="k">Preço</span><span class="v">Por cabeça, por kg ou por arroba</span></div>
+      <div class="row"><span class="k">Moeda</span><span class="v">Guarani · Real · Dólar</span></div>
+      <div class="row"><span class="k">Localização</span><span class="v">Cidade e departamento</span></div>
+      <div class="row"><span class="k">Fotos</span><span class="v">Até 8 por anúncio</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Prévia real</div>
+    <h2>Como os anúncios aparecem</h2>
+    <p class="note">Exemplos já cadastrados no sistema (as fotos entram depois).</p>
+    <div class="cards">
+
+      <div class="card">
+        <div class="band b1"><span class="glyph">🐂</span><span class="cat">Boi</span></div>
+        <div class="body">
+          <h3>Lote de 60 novillos Nelore</h3>
+          <div class="breed">Raça Nelore</div>
+          <div class="stats"><span><b>60</b>cabeças</span><span><b>380 kg</b>peso méd.</span><span><b>30 m</b>idade</span></div>
+          <div class="price">USD 780 <small>/ cabeça</small></div>
+          <div class="place">Asunción · Central</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="band b2"><span class="glyph">🐄</span><span class="cat">Novilha</span></div>
+        <div class="body">
+          <h3>40 vaquillonas Brangus</h3>
+          <div class="breed">Raça Brangus</div>
+          <div class="stats"><span><b>40</b>cabeças</span><span><b>320 kg</b>peso méd.</span><span><b>24 m</b>idade</span></div>
+          <div class="price">USD 690 <small>/ cabeça</small></div>
+          <div class="place">Ciudad del Este · Alto Paraná</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="band b3"><span class="glyph">🐃</span><span class="cat">Touro</span></div>
+        <div class="body">
+          <h3>Touros Angus registrados</h3>
+          <div class="breed">Raça Angus</div>
+          <div class="stats"><span><b>5</b>cabeças</span><span><b>620 kg</b>peso méd.</span><span><b>36 m</b>idade</span></div>
+          <div class="price">USD 2.500 <small>/ cabeça</small></div>
+          <div class="place">Encarnación · Itapúa</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="band b4"><span class="glyph">🐄</span><span class="cat">Matriz</span></div>
+        <div class="body">
+          <h3>80 matrizes Brahman</h3>
+          <div class="breed">Raça Brahman</div>
+          <div class="stats"><span><b>80</b>cabeças</span><span><b>450 kg</b>peso méd.</span><span><b>48 m</b>idade</span></div>
+          <div class="price">Gs 4.200.000 <small>/ cabeça</small></div>
+          <div class="place">Coronel Oviedo · Caaguazú</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="band b5"><span class="glyph">🐮</span><span class="cat">Bezerro</span></div>
+        <div class="body">
+          <h3>100 bezerros mestiços</h3>
+          <div class="breed">Mestiço</div>
+          <div class="stats"><span><b>100</b>cabeças</span><span><b>180 kg</b>peso méd.</span><span><b>8 m</b>idade</span></div>
+          <div class="price">Gs 14.500 <small>/ kg</small></div>
+          <div class="place">San Estanislao · San Pedro</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="band b6"><span class="glyph">🐂</span><span class="cat">Boi</span></div>
+        <div class="body">
+          <h3>Lote Braford por arroba</h3>
+          <div class="breed">Raça Braford</div>
+          <div class="stats"><span><b>35</b>cabeças</span><span><b>400 kg</b>peso méd.</span><span><b>28 m</b>idade</span></div>
+          <div class="price">Gs 320.000 <small>/ arroba</small></div>
+          <div class="place">Pedro Juan Caballero · Amambay</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Na mão do usuário</div>
+    <h2>O que dá pra fazer</h2>
+    <div class="acts">
+      <div class="act"><b>Buscar e filtrar</b><p>Por categoria, raça, preço, peso, quantidade e região.</p></div>
+      <div class="act"><b>Favoritar</b><p>Salvar anúncios pra decidir com calma.</p></div>
+      <div class="act"><b>Falar no WhatsApp</b><p>Contato direto com o vendedor, num toque.</p></div>
+      <div class="act"><b>Denunciar</b><p>Reportar anúncio suspeito pra moderação.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Já no sistema</div>
+    <h2>Categorias e raças</h2>
+    <div class="sub-l">Categorias</div>
+    <div class="tags">
+      <span class="tag">Boi</span><span class="tag">Vaca</span><span class="tag">Novilha</span>
+      <span class="tag">Bezerro</span><span class="tag">Touro</span><span class="tag">Matriz</span>
+    </div>
+    <div class="sub-l">Raças</div>
+    <div class="tags small">
+      <span class="tag">Nelore</span><span class="tag">Brangus</span><span class="tag">Braford</span>
+      <span class="tag">Angus</span><span class="tag">Brahman</span><span class="tag">Mestiço</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="gean">
+      <div class="eyebrow">Pra validar</div>
+      <h2>Gean, o que achas?</h2>
+      <p class="lead" style="margin-bottom:0;">Essa é a base do sistema. Antes das telas, preciso do teu olho de quem conhece o mercado:</p>
+      <ul>
+        <li>Falta alguma <b>categoria</b> ou <b>raça</b> importante no Paraguai?</li>
+        <li>O jeito de cobrar — <b>por cabeça / por kg / por arroba</b> — cobre tudo?</li>
+        <li>Falta um dado que o comprador sempre pergunta? <b>Sanidade, vacinas, documentação, frete…</b></li>
+        <li>As moedas <b>(Guarani, Real, Dólar)</b> estão certas?</li>
+      </ul>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <span class="brand">TROPA</span> · Mercado de Gado — Paraguai · prévia da base do sistema
+</footer>
+
+</body>
+</html>

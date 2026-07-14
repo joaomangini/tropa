@@ -1,0 +1,14 @@
+# Segredos — nunca subir
+.env
+.env.*
+!.env.example
+
+# Dependências / build (para quando o site existir)
+node_modules/
+.next/
+dist/
+build/
+
+# Sistema
+.DS_Store
+Thumbs.db
