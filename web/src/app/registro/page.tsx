@@ -26,11 +26,22 @@ export default function RegistroPage() {
 
     if (error) {
       setLoading(false);
-      setError(
-        error.message.includes("already")
-          ? "Ese email ya está registrado."
-          : "No se pudo crear la cuenta. Revisá los datos."
-      );
+      const m = error.message.toLowerCase();
+      if (m.includes("already") || m.includes("registered")) {
+        setError("Ese email ya está registrado. Probá iniciar sesión.");
+      } else if (m.includes("rate limit") || m.includes("too many")) {
+        setError(
+          "Demasiados intentos de registro. Esperá unos minutos, o desactivá la confirmación por email en Supabase."
+        );
+      } else if (m.includes("password")) {
+        setError("La contraseña no cumple los requisitos (mínimo 6 caracteres).");
+      } else if (m.includes("signups") || m.includes("not allowed")) {
+        setError(
+          "Los registros están desactivados en Supabase. Activá 'Allow new users to sign up'."
+        );
+      } else {
+        setError(`No se pudo crear la cuenta: ${error.message}`);
+      }
       return;
     }
 
