@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
-import PublishForm from "@/components/PublishForm";
+import ListingForm from "@/components/ListingForm";
 
 export default async function Publicar() {
   if (!isSupabaseConfigured()) redirect("/");
@@ -34,7 +34,7 @@ export default async function Publicar() {
         Completá los datos del ganado. Tu aviso aparece al instante en el
         mercado.
       </p>
-      <PublishForm categorias={categorias} razas={razas} />
+      <ListingForm mode="create" categorias={categorias} razas={razas} />
     </section>
   );
 }

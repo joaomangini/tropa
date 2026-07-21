@@ -18,8 +18,6 @@ export default async function AnimalPage({
       "id, title, description, head_count, avg_weight_kg, avg_age_months, price, price_type, currency, city, department, created_at, categories(slug,name_es), breeds(name), profiles!listings_seller_id_fkey(full_name,whatsapp,city,department)"
     )
     .eq("id", params.id)
-    .eq("status", "ativo")
-    .eq("moderation", "aprovado")
     .maybeSingle();
 
   if (!data) notFound();

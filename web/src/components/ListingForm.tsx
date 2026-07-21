@@ -6,33 +6,57 @@ import { createClient } from "@/lib/supabase/client";
 
 type Opcion = { id: number; nombre: string };
 
+export type ListingInitial = {
+  id?: string;
+  title?: string;
+  category_id?: number | string;
+  breed_id?: number | string | null;
+  head_count?: number | string;
+  avg_weight_kg?: number | string | null;
+  avg_age_months?: number | string | null;
+  price?: number | string;
+  price_type?: string;
+  currency?: string;
+  city?: string | null;
+  department?: string | null;
+  description?: string | null;
+};
+
 const inputCls =
   "rounded-md border border-crema-2 bg-white px-3 py-2 text-base w-full";
 
-export default function PublishForm({
+function str(v: unknown): string {
+  return v === null || v === undefined ? "" : String(v);
+}
+
+export default function ListingForm({
   categorias,
   razas,
+  mode,
+  initial,
 }: {
   categorias: Opcion[];
   razas: Opcion[];
+  mode: "create" | "edit";
+  initial?: ListingInitial;
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
-    title: "",
-    category_id: "",
-    breed_id: "",
-    head_count: "",
-    avg_weight_kg: "",
-    avg_age_months: "",
-    price: "",
-    price_type: "por_cabeca",
-    currency: "PYG",
-    city: "",
-    department: "",
-    description: "",
+    title: str(initial?.title),
+    category_id: str(initial?.category_id),
+    breed_id: str(initial?.breed_id),
+    head_count: str(initial?.head_count),
+    avg_weight_kg: str(initial?.avg_weight_kg),
+    avg_age_months: str(initial?.avg_age_months),
+    price: str(initial?.price),
+    price_type: initial?.price_type ?? "por_cabeca",
+    currency: initial?.currency ?? "PYG",
+    city: str(initial?.city),
+    department: str(initial?.department),
+    description: str(initial?.description),
   });
 
   function set(campo: string, valor: string) {
@@ -48,51 +72,63 @@ export default function PublishForm({
     const {
       data: { user },
     } = await supabase.auth.getUser();
-
     if (!user) {
       setLoading(false);
       router.push("/login");
       return;
     }
 
+    const campos = {
+      title: form.title,
+      category_id: Number(form.category_id),
+      breed_id: form.breed_id ? Number(form.breed_id) : null,
+      head_count: Number(form.head_count),
+      avg_weight_kg: form.avg_weight_kg ? Number(form.avg_weight_kg) : null,
+      avg_age_months: form.avg_age_months ? Number(form.avg_age_months) : null,
+      price: Number(form.price),
+      price_type: form.price_type,
+      currency: form.currency,
+      city: form.city || null,
+      department: form.department || null,
+      description: form.description || null,
+    };
+
+    if (mode === "edit" && initial?.id) {
+      const { error } = await supabase
+        .from("listings")
+        .update(campos)
+        .eq("id", initial.id);
+      setLoading(false);
+      if (error) {
+        setError("No se pudieron guardar los cambios.");
+        return;
+      }
+      router.push(`/animal/${initial.id}`);
+      router.refresh();
+      return;
+    }
+
     const ahora = new Date();
     const expira = new Date(ahora.getTime() + 30 * 24 * 60 * 60 * 1000);
-
     const { data, error } = await supabase
       .from("listings")
       .insert({
+        ...campos,
         seller_id: user.id,
-        title: form.title,
-        category_id: Number(form.category_id),
-        breed_id: form.breed_id ? Number(form.breed_id) : null,
-        head_count: Number(form.head_count),
-        avg_weight_kg: form.avg_weight_kg ? Number(form.avg_weight_kg) : null,
-        avg_age_months: form.avg_age_months
-          ? Number(form.avg_age_months)
-          : null,
-        price: Number(form.price),
-        price_type: form.price_type,
-        currency: form.currency,
-        city: form.city || null,
-        department: form.department || null,
-        description: form.description || null,
         status: "ativo",
-        moderation: "aprovado", // auto-aprovado por enquanto (moderação real = Etapa 8)
+        moderation: "aprovado",
         published_at: ahora.toISOString(),
         expires_at: expira.toISOString(),
       })
       .select("id")
       .single();
-
     setLoading(false);
-
     if (error || !data) {
       setError(
         "No se pudo publicar. Revisá que completaste tu perfil y los campos obligatorios."
       );
       return;
     }
-
     router.push(`/animal/${data.id}`);
     router.refresh();
   }
@@ -253,7 +289,11 @@ export default function PublishForm({
         disabled={loading}
         className="rounded-md bg-pasto px-6 py-3 font-semibold text-crema transition-colors hover:bg-pasto-hondo disabled:opacity-60"
       >
-        {loading ? "Publicando…" : "Publicar aviso"}
+        {loading
+          ? "Guardando…"
+          : mode === "edit"
+            ? "Guardar cambios"
+            : "Publicar aviso"}
       </button>
     </form>
   );

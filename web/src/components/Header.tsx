@@ -47,7 +47,15 @@ export default async function Header() {
 
         <div className="flex items-center gap-4">
           {logged ? (
-            <LogoutButton />
+            <>
+              <Link
+                href="/mis-avisos"
+                className="hidden text-sm font-medium text-tinta/80 transition-colors hover:text-pasto sm:inline"
+              >
+                Mis avisos
+              </Link>
+              <LogoutButton />
+            </>
           ) : (
             <Link
               href="/login"
