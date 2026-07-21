@@ -28,7 +28,9 @@ async function getHomeData(): Promise<HomeData> {
     return {
       configured: true,
       anuncios: anunciosRes.count ?? 0,
-      categorias: (categoriasRes.data ?? []).map((c) => c.name_es as string),
+      categorias: (categoriasRes.data ?? []).map(
+        (c: { name_es: string }) => c.name_es
+      ),
       razas: razasRes.count ?? 0,
     };
   } catch {
