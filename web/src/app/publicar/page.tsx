@@ -1,34 +1,40 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
+import PublishForm from "@/components/PublishForm";
 
-export default function Publicar() {
+export default async function Publicar() {
+  if (!isSupabaseConfigured()) redirect("/");
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
+  const [catRes, razRes] = await Promise.all([
+    supabase.from("categories").select("id,name_es").order("sort_order"),
+    supabase.from("breeds").select("id,name").order("sort_order"),
+  ]);
+
+  const categorias = (catRes.data ?? []).map(
+    (c: { id: number; name_es: string }) => ({ id: c.id, nombre: c.name_es })
+  );
+  const razas = (razRes.data ?? []).map((r: { id: number; name: string }) => ({
+    id: r.id,
+    nombre: r.name,
+  }));
+
   return (
-    <section className="mx-auto max-w-3xl px-5 py-20 text-center">
-      <div className="text-5xl">🐂</div>
-      <h1 className="mt-4 font-display text-4xl font-bold text-pasto-hondo">
+    <section className="mx-auto max-w-2xl px-5 py-12">
+      <h1 className="font-display text-4xl font-bold text-pasto-hondo">
         Anunciá tu lote
       </h1>
-      <p className="mx-auto mt-4 max-w-lg text-humo">
-        Acá vas a poder cargar tu ganado: fotos, categoría, raza, peso, precio y
-        ubicación. Estamos construyendo esta parte.
+      <p className="mt-2 text-humo">
+        Completá los datos del ganado. Tu aviso aparece al instante en el
+        mercado.
       </p>
-
-      <div className="mx-auto mt-8 max-w-md rounded-lg border border-crema-2 bg-white p-6 text-left">
-        <div className="text-xs font-semibold uppercase tracking-widest text-tierra">
-          Próximamente
-        </div>
-        <ul className="mt-3 space-y-2 text-sm text-tinta">
-          <li>• Crear una cuenta e iniciar sesión</li>
-          <li>• Cargar el lote con hasta 8 fotos</li>
-          <li>• Publicar y recibir contactos por WhatsApp</li>
-        </ul>
-      </div>
-
-      <Link
-        href="/"
-        className="mt-8 inline-block rounded-md bg-pasto px-6 py-3 font-semibold text-crema transition-colors hover:bg-pasto-hondo"
-      >
-        ← Volver al inicio
-      </Link>
+      <PublishForm categorias={categorias} razas={razas} />
     </section>
   );
 }
