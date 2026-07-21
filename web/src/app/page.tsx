@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
+import { precioTexto, catStyle } from "@/lib/format";
 
 type Card = {
   id: string;
@@ -21,27 +22,6 @@ type HomeData = {
   categorias: string[];
   razas: number | null;
   listings: Card[];
-};
-
-const MONEDA: Record<string, string> = { USD: "USD", BRL: "R$", PYG: "Gs" };
-const UNIDAD: Record<string, string> = {
-  por_cabeca: "/ cabeza",
-  por_kg: "/ kg",
-  por_arroba: "/ arroba",
-};
-
-function precioTexto(price: number, tipo: string, moneda: string): string {
-  const n = new Intl.NumberFormat("es-PY").format(Number(price));
-  return `${MONEDA[moneda] ?? moneda} ${n} ${UNIDAD[tipo] ?? ""}`.trim();
-}
-
-const CAT: Record<string, { emoji: string; band: string }> = {
-  boi: { emoji: "🐂", band: "bg-[#4c7a4f]" },
-  vaca: { emoji: "🐄", band: "bg-[#8a6a3c]" },
-  novilha: { emoji: "🐮", band: "bg-[#5b7488]" },
-  bezerro: { emoji: "🐮", band: "bg-[#6f8a45]" },
-  touro: { emoji: "🐃", band: "bg-[#5b6f88]" },
-  matriz: { emoji: "🐄", band: "bg-[#a06a3a]" },
 };
 
 async function getHomeData(): Promise<HomeData> {
@@ -193,11 +173,12 @@ export default async function Home() {
         ) : (
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {data.listings.map((l) => {
-              const c = CAT[l.slug] ?? { emoji: "🐄", band: "bg-pasto" };
+              const c = catStyle(l.slug);
               return (
-                <article
+                <Link
                   key={l.id}
-                  className="flex flex-col overflow-hidden rounded-lg border border-crema-2 bg-white"
+                  href={`/animal/${l.id}`}
+                  className="flex flex-col overflow-hidden rounded-lg border border-crema-2 bg-white transition-shadow hover:shadow-md"
                 >
                   <div
                     className={`relative flex h-24 items-end p-3 ${c.band}`}
@@ -243,7 +224,7 @@ export default async function Home() {
                       </div>
                     )}
                   </div>
-                </article>
+                </Link>
               );
             })}
           </div>
