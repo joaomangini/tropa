@@ -35,7 +35,7 @@ export default function Header() {
         </nav>
 
         <Link
-          href="/#publicar"
+          href="/publicar"
           className="rounded-md bg-pasto px-4 py-2 text-sm font-semibold text-crema transition-colors hover:bg-pasto-hondo"
         >
           Anunciar

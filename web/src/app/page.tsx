@@ -1,21 +1,63 @@
+import Link from "next/link";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
+
+type Card = {
+  id: string;
+  title: string;
+  categoria: string;
+  slug: string;
+  raza: string | null;
+  cabezas: number;
+  peso: number | null;
+  edad: number | null;
+  precio: string;
+  ciudad: string | null;
+  departamento: string | null;
+};
 
 type HomeData = {
   configured: boolean;
   anuncios: number | null;
   categorias: string[];
   razas: number | null;
+  listings: Card[];
+};
+
+const MONEDA: Record<string, string> = { USD: "USD", BRL: "R$", PYG: "Gs" };
+const UNIDAD: Record<string, string> = {
+  por_cabeca: "/ cabeza",
+  por_kg: "/ kg",
+  por_arroba: "/ arroba",
+};
+
+function precioTexto(price: number, tipo: string, moneda: string): string {
+  const n = new Intl.NumberFormat("es-PY").format(Number(price));
+  return `${MONEDA[moneda] ?? moneda} ${n} ${UNIDAD[tipo] ?? ""}`.trim();
+}
+
+const CAT: Record<string, { emoji: string; band: string }> = {
+  boi: { emoji: "🐂", band: "bg-[#4c7a4f]" },
+  vaca: { emoji: "🐄", band: "bg-[#8a6a3c]" },
+  novilha: { emoji: "🐮", band: "bg-[#5b7488]" },
+  bezerro: { emoji: "🐮", band: "bg-[#6f8a45]" },
+  touro: { emoji: "🐃", band: "bg-[#5b6f88]" },
+  matriz: { emoji: "🐄", band: "bg-[#a06a3a]" },
 };
 
 async function getHomeData(): Promise<HomeData> {
-  if (!isSupabaseConfigured()) {
-    return { configured: false, anuncios: null, categorias: [], razas: null };
-  }
+  const vazio: HomeData = {
+    configured: false,
+    anuncios: null,
+    categorias: [],
+    razas: null,
+    listings: [],
+  };
+  if (!isSupabaseConfigured()) return vazio;
 
   try {
     const supabase = createClient();
 
-    const [anunciosRes, categoriasRes, razasRes] = await Promise.all([
+    const [anunciosRes, categoriasRes, razasRes, listRes] = await Promise.all([
       supabase
         .from("listings")
         .select("*", { count: "exact", head: true })
@@ -23,7 +65,35 @@ async function getHomeData(): Promise<HomeData> {
         .eq("moderation", "aprovado"),
       supabase.from("categories").select("name_es").order("sort_order"),
       supabase.from("breeds").select("*", { count: "exact", head: true }),
+      supabase
+        .from("listings")
+        .select(
+          "id, title, head_count, avg_weight_kg, avg_age_months, price, price_type, currency, city, department, categories(slug,name_es), breeds(name)"
+        )
+        .eq("status", "ativo")
+        .eq("moderation", "aprovado")
+        .order("created_at", { ascending: false })
+        .limit(12),
     ]);
+
+    const raw = (listRes.data ?? []) as any[];
+    const listings: Card[] = raw.map((l) => {
+      const cat = Array.isArray(l.categories) ? l.categories[0] : l.categories;
+      const br = Array.isArray(l.breeds) ? l.breeds[0] : l.breeds;
+      return {
+        id: String(l.id),
+        title: String(l.title),
+        categoria: cat?.name_es ?? "",
+        slug: cat?.slug ?? "",
+        raza: br?.name ?? null,
+        cabezas: Number(l.head_count),
+        peso: l.avg_weight_kg == null ? null : Number(l.avg_weight_kg),
+        edad: l.avg_age_months == null ? null : Number(l.avg_age_months),
+        precio: precioTexto(l.price, l.price_type, l.currency),
+        ciudad: l.city ?? null,
+        departamento: l.department ?? null,
+      };
+    });
 
     return {
       configured: true,
@@ -32,9 +102,10 @@ async function getHomeData(): Promise<HomeData> {
         (c: { name_es: string }) => c.name_es
       ),
       razas: razasRes.count ?? 0,
+      listings,
     };
   } catch {
-    return { configured: false, anuncios: null, categorias: [], razas: null };
+    return vazio;
   }
 }
 
@@ -63,12 +134,12 @@ export default async function Home() {
             >
               Ver animales
             </a>
-            <a
-              href="#publicar"
+            <Link
+              href="/publicar"
               className="rounded-md border border-crema/30 px-6 py-3 font-semibold text-crema transition-colors hover:bg-crema/10"
             >
               Anunciar mi lote
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -91,30 +162,92 @@ export default async function Home() {
         </div>
         {!data.configured && (
           <p className="mx-auto max-w-6xl px-5 py-3 text-center text-xs text-humo">
-            (Conectá las claves del Supabase para ver los números en vivo.)
+            (Conectá las claves del Supabase en Vercel para ver los datos en
+            vivo.)
           </p>
         )}
       </section>
 
-      {/* CATEGORÍAS — chips do banco */}
-      <section id="razas" className="mx-auto max-w-6xl px-5 py-16">
-        <h2 className="font-display text-3xl font-bold text-pasto-hondo">
-          Categorías de animal
-        </h2>
-        <p className="mt-1 text-humo">Elegí lo que buscás.</p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          {(data.categorias.length > 0
-            ? data.categorias
-            : ["Buey", "Vaca", "Vaquillona", "Ternero", "Toro", "Matriz"]
-          ).map((cat) => (
-            <span
-              key={cat}
-              className="rounded border border-crema-2 bg-white px-4 py-2 text-sm font-medium text-tinta"
-            >
-              {cat}
-            </span>
-          ))}
+      {/* ANIMALES — cards reais do banco */}
+      <section id="animales" className="mx-auto max-w-6xl px-5 py-16">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h2 className="font-display text-3xl font-bold text-pasto-hondo">
+              Animales en venta
+            </h2>
+            <p className="mt-1 text-humo">Lotes publicados en el mercado.</p>
+          </div>
+          <Link
+            href="/publicar"
+            className="hidden rounded-md bg-pasto px-4 py-2 text-sm font-semibold text-crema hover:bg-pasto-hondo sm:inline-block"
+          >
+            Anunciar
+          </Link>
         </div>
+
+        {data.listings.length === 0 ? (
+          <p className="mt-8 max-w-lg text-humo">
+            Todavía no hay animales para mostrar. Si conectaste el banco y no
+            aparecen, revisá las variables de entorno en Vercel. 🐂
+          </p>
+        ) : (
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {data.listings.map((l) => {
+              const c = CAT[l.slug] ?? { emoji: "🐄", band: "bg-pasto" };
+              return (
+                <article
+                  key={l.id}
+                  className="flex flex-col overflow-hidden rounded-lg border border-crema-2 bg-white"
+                >
+                  <div
+                    className={`relative flex h-24 items-end p-3 ${c.band}`}
+                  >
+                    <span
+                      aria-hidden
+                      className="absolute -top-1 right-2 text-6xl opacity-30"
+                    >
+                      {c.emoji}
+                    </span>
+                    <span className="relative z-10 rounded bg-black/35 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
+                      {l.categoria}
+                    </span>
+                  </div>
+                  <div className="flex flex-1 flex-col gap-2 p-4">
+                    <h3 className="font-semibold leading-tight text-tinta">
+                      {l.title}
+                    </h3>
+                    {l.raza && (
+                      <div className="text-xs text-humo">Raza {l.raza}</div>
+                    )}
+                    <div className="flex gap-4 border-t border-dashed border-crema-2 pt-2 text-xs tabular-nums text-humo">
+                      <span>
+                        <b className="block text-tinta">{l.cabezas}</b>cabezas
+                      </span>
+                      {l.peso != null && (
+                        <span>
+                          <b className="block text-tinta">{l.peso} kg</b>peso
+                        </span>
+                      )}
+                      {l.edad != null && (
+                        <span>
+                          <b className="block text-tinta">{l.edad} m</b>edad
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-auto pt-2 font-display text-xl font-bold tabular-nums text-pasto">
+                      {l.precio}
+                    </div>
+                    {(l.ciudad || l.departamento) && (
+                      <div className="text-xs text-humo">
+                        📍 {[l.ciudad, l.departamento].filter(Boolean).join(" · ")}
+                      </div>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* CÓMO FUNCIONA */}
@@ -156,15 +289,25 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* PLACEHOLDER dos anúncios (Etapa 5) */}
-      <section id="animales" className="mx-auto max-w-6xl px-5 py-16">
+      {/* CATEGORÍAS */}
+      <section id="razas" className="mx-auto max-w-6xl px-5 py-16">
         <h2 className="font-display text-3xl font-bold text-pasto-hondo">
-          Animales en venta
+          Categorías de animal
         </h2>
-        <p className="mt-2 max-w-lg text-humo">
-          La lista de anuncios con búsqueda y filtros llega en el próximo paso.
-          El motor (la base de datos) ya está conectado. 🐂
-        </p>
+        <p className="mt-1 text-humo">Elegí lo que buscás.</p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          {(data.categorias.length > 0
+            ? data.categorias
+            : ["Novillo", "Vaca", "Vaquillona", "Ternero", "Toro", "Matriz"]
+          ).map((cat) => (
+            <span
+              key={cat}
+              className="rounded border border-crema-2 bg-white px-4 py-2 text-sm font-medium text-tinta"
+            >
+              {cat}
+            </span>
+          ))}
+        </div>
       </section>
     </>
   );
