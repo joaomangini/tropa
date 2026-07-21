@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: #f4efe4;
+  color: #21241c;
+}
+
+/* Foco visível para acessibilidade (teclado) */
+:focus-visible {
+  outline: 2px solid #3a6b3d;
+  outline-offset: 2px;
+}

@@ -18,7 +18,9 @@ _"Tropa" é só um nome de trabalho — dá pra trocar depois._
   - DDL: [`supabase/migrations/0001_schema_inicial.sql`](supabase/migrations/0001_schema_inicial.sql)
   - Seed (categorias/raças): [`supabase/seed.sql`](supabase/seed.sql)
   - Documentação: [`docs/modelagem-banco.md`](docs/modelagem-banco.md)
-- [ ] Etapa 2 — Setup do projeto Next.js + Supabase
+- [~] **Etapa 2 — Setup do projeto Next.js + Supabase**
+  - [x] Scaffold do site em [`web/`](web/): App Router + TS + Tailwind, clientes Supabase, layout base (header/footer) e home em espanhol ligada ao banco
+  - [ ] Deploy na Vercel (root `web/`, variáveis do Supabase)
 - [~] **Etapa 3 — Autenticação e perfil**
   - [x] Parte de banco: RLS + triggers de proteção — [`supabase/migrations/0002_rls_policies.sql`](supabase/migrations/0002_rls_policies.sql)
   - [ ] Parte de telas: páginas de cadastro/login, middleware (depende do scaffold da Etapa 2)
@@ -33,14 +35,17 @@ _"Tropa" é só um nome de trabalho — dá pra trocar depois._
 
 ```
 marketplace-gado/
-├── docs/
-│   └── modelagem-banco.md          # diagrama + explicação das tabelas
+├── docs/                           # apresentação (GitHub Pages) + doc do banco
 ├── supabase/
 │   ├── migrations/
 │   │   ├── 0001_schema_inicial.sql # DDL completo (13 tabelas + 9 enums)
 │   │   └── 0002_rls_policies.sql   # segurança (RLS) + triggers de proteção
 │   ├── seed.sql                    # categorias e raças fixas
 │   └── demo_seed.sql               # dados fictícios p/ testar (6 anúncios etc.)
+├── web/                            # o site (Next.js) — deploy na Vercel
+│   ├── src/app/                    # páginas (App Router)
+│   ├── src/components/             # Header, Footer
+│   └── src/lib/supabase/           # conexão com o banco (server + browser)
 └── README.md
 
 ## Ordem para rodar no SQL Editor do Supabase
