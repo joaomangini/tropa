@@ -15,7 +15,7 @@ export default async function AnimalPage({
   const { data } = await supabase
     .from("listings")
     .select(
-      "id, title, description, head_count, avg_weight_kg, avg_age_months, price, price_type, currency, city, department, created_at, categories(slug,name_es), breeds(name), profiles(full_name,whatsapp,city,department)"
+      "id, title, description, head_count, avg_weight_kg, avg_age_months, price, price_type, currency, city, department, created_at, categories(slug,name_es), breeds(name), profiles!listings_seller_id_fkey(full_name,whatsapp,city,department)"
     )
     .eq("id", params.id)
     .eq("status", "ativo")
