@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { precioTexto, catStyle, photoUrl } from "@/lib/format";
@@ -100,6 +101,7 @@ async function getHomeData(): Promise<HomeData> {
 export default async function Home() {
   const data = await getHomeData();
   const banner = await getActiveBanner("home_top");
+  const bannerFeed = await getActiveBanner("feed_inline");
 
   return (
     <>
@@ -187,11 +189,11 @@ export default async function Home() {
           </p>
         ) : (
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {data.listings.map((l) => {
+            {data.listings.map((l, i) => {
               const c = catStyle(l.slug);
               return (
+                <Fragment key={l.id}>
                 <Link
-                  key={l.id}
                   href={`/animal/${l.id}`}
                   className="flex flex-col overflow-hidden rounded-lg border border-crema-2 bg-white transition-shadow hover:shadow-md"
                 >
@@ -248,6 +250,12 @@ export default async function Home() {
                     )}
                   </div>
                 </Link>
+                {bannerFeed && (i + 1) % 6 === 0 && (
+                  <div className="col-span-full">
+                    <BannerSlot campaign={bannerFeed} />
+                  </div>
+                )}
+                </Fragment>
               );
             })}
           </div>
