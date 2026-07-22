@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { precioTexto, catStyle } from "@/lib/format";
 import WhatsappButton from "@/components/WhatsappButton";
+import RegisterSaleForm from "@/components/RegisterSaleForm";
 
 export default async function AnimalPage({
   params,
@@ -15,7 +16,7 @@ export default async function AnimalPage({
   const { data } = await supabase
     .from("listings")
     .select(
-      "id, title, description, head_count, avg_weight_kg, avg_age_months, price, price_type, currency, city, department, created_at, categories(slug,name_es), breeds(name), profiles!listings_seller_id_fkey(full_name,whatsapp,city,department)"
+      "id, seller_id, title, description, head_count, avg_weight_kg, avg_age_months, price, price_type, currency, city, department, created_at, categories(slug,name_es), breeds(name), profiles!listings_seller_id_fkey(full_name,whatsapp,city,department)"
     )
     .eq("id", params.id)
     .maybeSingle();
@@ -27,6 +28,29 @@ export default async function AnimalPage({
   const br = Array.isArray(l.breeds) ? l.breeds[0] : l.breeds;
   const seller = Array.isArray(l.profiles) ? l.profiles[0] : l.profiles;
   const c = catStyle(cat?.slug ?? "");
+
+  // Painel de vendas — só para o dono do anúncio.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isOwner = Boolean(user && user.id === l.seller_id);
+
+  let ventas: any[] | null = null;
+  if (isOwner) {
+    const { data: sData, error: sErr } = await supabase
+      .from("sales")
+      .select("id, quantity, buyer_name, buyer_phone, sold_at")
+      .eq("listing_id", l.id)
+      .order("sold_at", { ascending: false });
+    // sErr acontece se a tabela "sales" ainda não foi criada (migração 0003).
+    ventas = sErr ? null : ((sData ?? []) as any[]);
+  }
+
+  const totalVendido = (ventas ?? []).reduce(
+    (soma, v) => soma + Number(v.quantity),
+    0
+  );
+  const restante = Number(l.head_count) - totalVendido;
 
   const specs = [
     { k: "Categoría", v: cat?.name_es ?? "—" },
@@ -135,6 +159,56 @@ export default async function AnimalPage({
           </div>
         </aside>
       </div>
+
+      {/* Painel de vendas — só o dono vê */}
+      {isOwner && ventas !== null && (
+        <div className="mt-10 rounded-xl border border-crema-2 bg-white p-6">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="font-display text-xl font-bold text-pasto-hondo">
+              Ventas
+            </h2>
+            <div className="text-sm text-humo">
+              Vendidos{" "}
+              <b className="text-tinta tabular-nums">{totalVendido}</b> de{" "}
+              <b className="text-tinta tabular-nums">{l.head_count}</b> ·
+              quedan{" "}
+              <b className="text-pasto tabular-nums">
+                {restante > 0 ? restante : 0}
+              </b>
+            </div>
+          </div>
+
+          {ventas.length > 0 && (
+            <ul className="mt-4 divide-y divide-crema-2 border-y border-crema-2">
+              {ventas.map((v) => (
+                <li
+                  key={v.id}
+                  className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm"
+                >
+                  <span className="font-semibold text-tinta tabular-nums">
+                    {v.quantity} cabezas
+                  </span>
+                  <span className="text-humo">
+                    {v.buyer_name || "Comprador"}
+                    {v.buyer_phone ? ` · ${v.buyer_phone}` : ""}
+                  </span>
+                  <span className="text-xs text-humo">
+                    {new Date(v.sold_at).toLocaleDateString("es-PY")}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {restante > 0 ? (
+            <RegisterSaleForm listingId={l.id} maxRemaining={restante} />
+          ) : (
+            <p className="mt-4 text-sm font-semibold text-tierra">
+              Lote vendido por completo. 🐂
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
