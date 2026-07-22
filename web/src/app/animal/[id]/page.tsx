@@ -5,6 +5,7 @@ import { precioTexto, catStyle } from "@/lib/format";
 import WhatsappButton from "@/components/WhatsappButton";
 import RegisterSaleForm from "@/components/RegisterSaleForm";
 import Gallery from "@/components/Gallery";
+import AddToCartButton from "@/components/cart/AddToCartButton";
 
 export default async function AnimalPage({
   params,
@@ -165,6 +166,19 @@ export default async function AnimalPage({
                 </p>
               )}
             </div>
+
+            <div className="mt-3">
+              <AddToCartButton
+                item={{
+                  id: l.id,
+                  title: l.title,
+                  precio: precioTexto(l.price, l.price_type, l.currency),
+                  sellerName: seller?.full_name ?? "Vendedor",
+                  sellerWhatsapp: seller?.whatsapp ?? "",
+                }}
+              />
+            </div>
+
             <p className="mt-3 text-center text-xs text-humo">
               El contacto es directo entre comprador y vendedor.
             </p>

@@ -3,6 +3,7 @@ import { Barlow_Condensed, DM_Sans } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { CartProvider } from "@/components/cart/CartProvider";
 
 const display = Barlow_Condensed({
   subsets: ["latin"],
@@ -29,9 +30,11 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={`${display.variable} ${body.variable} font-sans`}>
-        <Header />
-        <main>{children}</main>
-        <Footer />
+        <CartProvider>
+          <Header />
+          <main>{children}</main>
+          <Footer />
+        </CartProvider>
       </body>
     </html>
   );

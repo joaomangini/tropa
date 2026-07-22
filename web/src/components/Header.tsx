@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import LogoutButton from "./LogoutButton";
+import CartButton from "./cart/CartButton";
 
 const nav = [
   { label: "Animales", href: "/#animales" },
@@ -46,6 +47,7 @@ export default async function Header() {
         </nav>
 
         <div className="flex items-center gap-4">
+          <CartButton />
           {logged ? (
             <>
               <Link
