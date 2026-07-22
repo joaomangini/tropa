@@ -6,6 +6,8 @@ import WhatsappButton from "@/components/WhatsappButton";
 import RegisterSaleForm from "@/components/RegisterSaleForm";
 import Gallery from "@/components/Gallery";
 import AddToCartButton from "@/components/cart/AddToCartButton";
+import { getActiveBanner } from "@/lib/banners";
+import BannerSlot from "@/components/banner/BannerSlot";
 
 export default async function AnimalPage({
   params,
@@ -60,6 +62,8 @@ export default async function AnimalPage({
     0
   );
   const restante = Number(l.head_count) - totalVendido;
+
+  const banner = await getActiveBanner("detail_footer");
 
   const specs = [
     { k: "Categoría", v: cat?.name_es ?? "—" },
@@ -233,6 +237,12 @@ export default async function AnimalPage({
               Lote vendido por completo. 🐂
             </p>
           )}
+        </div>
+      )}
+
+      {banner && (
+        <div className="mt-4">
+          <BannerSlot campaign={banner} />
         </div>
       )}
     </div>

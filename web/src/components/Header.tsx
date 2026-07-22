@@ -11,12 +11,21 @@ const nav = [
 
 export default async function Header() {
   let logged = false;
+  let isAdmin = false;
   if (isSupabaseConfigured()) {
     const supabase = createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
     logged = Boolean(user);
+    if (user) {
+      const { data: perfil } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", user.id)
+        .maybeSingle();
+      isAdmin = Boolean((perfil as any)?.is_admin);
+    }
   }
 
   return (
@@ -50,6 +59,14 @@ export default async function Header() {
           <CartButton />
           {logged ? (
             <>
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  className="hidden text-sm font-semibold text-tierra transition-colors hover:opacity-80 sm:inline"
+                >
+                  Admin
+                </Link>
+              )}
               <Link
                 href="/mis-avisos"
                 className="hidden text-sm font-medium text-tinta/80 transition-colors hover:text-pasto sm:inline"

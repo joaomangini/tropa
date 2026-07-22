@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { precioTexto, catStyle, photoUrl } from "@/lib/format";
+import { getActiveBanner } from "@/lib/banners";
+import BannerSlot from "@/components/banner/BannerSlot";
 
 type Card = {
   id: string;
@@ -97,6 +99,7 @@ async function getHomeData(): Promise<HomeData> {
 
 export default async function Home() {
   const data = await getHomeData();
+  const banner = await getActiveBanner("home_top");
 
   return (
     <>
@@ -153,6 +156,12 @@ export default async function Home() {
           </p>
         )}
       </section>
+
+      {banner && (
+        <div className="mx-auto max-w-6xl px-5">
+          <BannerSlot campaign={banner} />
+        </div>
+      )}
 
       {/* ANIMALES — cards reais do banco */}
       <section id="animales" className="mx-auto max-w-6xl px-5 py-16">
