@@ -29,6 +29,55 @@ function str(v: unknown): string {
   return v === null || v === undefined ? "" : String(v);
 }
 
+// Redimensiona a imagem no navegador (máx 1280px, JPEG) para subir mais leve.
+async function compressImage(file: File): Promise<Blob> {
+  const img = await createImageBitmap(file);
+  const maxW = 1280;
+  const scale = Math.min(1, maxW / img.width);
+  const w = Math.round(img.width * scale);
+  const h = Math.round(img.height * scale);
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("sin contexto");
+  ctx.drawImage(img, 0, 0, w, h);
+  return await new Promise<Blob>((resolve, reject) =>
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("sin blob"))),
+      "image/jpeg",
+      0.8
+    )
+  );
+}
+
+async function uploadPhotos(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  listingId: string,
+  files: File[]
+) {
+  for (let i = 0; i < files.length; i++) {
+    let blob: Blob = files[i];
+    let ext = "jpg";
+    try {
+      blob = await compressImage(files[i]);
+    } catch {
+      blob = files[i];
+      ext = files[i].name.split(".").pop() || "jpg";
+    }
+    const path = `${userId}/${listingId}/${Date.now()}-${i}.${ext}`;
+    const { error } = await supabase.storage
+      .from("listing-photos")
+      .upload(path, blob, { contentType: blob.type || "image/jpeg" });
+    if (!error) {
+      await supabase
+        .from("listing_photos")
+        .insert({ listing_id: listingId, storage_path: path, sort_order: i });
+    }
+  }
+}
+
 export default function ListingForm({
   categorias,
   razas,
@@ -43,6 +92,7 @@ export default function ListingForm({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
 
   const [form, setForm] = useState({
     title: str(initial?.title),
@@ -98,11 +148,13 @@ export default function ListingForm({
         .from("listings")
         .update(campos)
         .eq("id", initial.id);
-      setLoading(false);
       if (error) {
+        setLoading(false);
         setError("No se pudieron guardar los cambios.");
         return;
       }
+      if (files.length) await uploadPhotos(supabase, user.id, initial.id, files);
+      setLoading(false);
       router.push(`/animal/${initial.id}`);
       router.refresh();
       return;
@@ -122,13 +174,15 @@ export default function ListingForm({
       })
       .select("id")
       .single();
-    setLoading(false);
     if (error || !data) {
+      setLoading(false);
       setError(
         "No se pudo publicar. Revisá que completaste tu perfil y los campos obligatorios."
       );
       return;
     }
+    if (files.length) await uploadPhotos(supabase, user.id, data.id, files);
+    setLoading(false);
     router.push(`/animal/${data.id}`);
     router.refresh();
   }
@@ -280,6 +334,29 @@ export default function ListingForm({
           onChange={(e) => set("description", e.target.value)}
           className={inputCls}
         />
+      </label>
+
+      <label className="flex flex-col gap-1 text-sm font-medium text-tinta">
+        Fotos (hasta 8)
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={(e) =>
+            setFiles(Array.from(e.target.files ?? []).slice(0, 8))
+          }
+          className="text-sm text-humo file:mr-3 file:rounded-md file:border-0 file:bg-pasto file:px-4 file:py-2 file:text-sm file:font-semibold file:text-crema"
+        />
+        {files.length > 0 && (
+          <span className="text-xs text-humo">
+            {files.length} foto(s) seleccionada(s)
+          </span>
+        )}
+        {mode === "edit" && (
+          <span className="text-xs text-humo">
+            Las fotos nuevas se agregan a las que ya tiene.
+          </span>
+        )}
       </label>
 
       {error && <p className="text-sm text-tierra">{error}</p>}

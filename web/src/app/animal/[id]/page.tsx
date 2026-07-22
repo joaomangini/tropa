@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
-import { precioTexto, catStyle } from "@/lib/format";
+import { precioTexto, catStyle, photoUrl } from "@/lib/format";
 import WhatsappButton from "@/components/WhatsappButton";
 import RegisterSaleForm from "@/components/RegisterSaleForm";
 
@@ -16,7 +16,7 @@ export default async function AnimalPage({
   const { data } = await supabase
     .from("listings")
     .select(
-      "id, seller_id, title, description, head_count, avg_weight_kg, avg_age_months, price, price_type, currency, city, department, created_at, categories(slug,name_es), breeds(name), profiles!listings_seller_id_fkey(full_name,whatsapp,city,department)"
+      "id, seller_id, title, description, head_count, avg_weight_kg, avg_age_months, price, price_type, currency, city, department, created_at, categories(slug,name_es), breeds(name), listing_photos(storage_path,sort_order), profiles!listings_seller_id_fkey(full_name,whatsapp,city,department)"
     )
     .eq("id", params.id)
     .maybeSingle();
@@ -28,6 +28,13 @@ export default async function AnimalPage({
   const br = Array.isArray(l.breeds) ? l.breeds[0] : l.breeds;
   const seller = Array.isArray(l.profiles) ? l.profiles[0] : l.profiles;
   const c = catStyle(cat?.slug ?? "");
+
+  const fotos: string[] = (
+    Array.isArray(l.listing_photos) ? l.listing_photos : []
+  )
+    .slice()
+    .sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+    .map((p: any) => p.storage_path as string);
 
   // Painel de vendas — só para o dono do anúncio.
   const {
@@ -79,19 +86,43 @@ export default async function AnimalPage({
       <div className="mt-4 grid gap-8 md:grid-cols-[1.2fr_1fr]">
         {/* Coluna esquerda: "foto" + dados */}
         <div>
-          <div
-            className={`relative flex h-56 items-end overflow-hidden rounded-xl p-5 ${c.band}`}
-          >
-            <span
-              aria-hidden
-              className="absolute -right-4 -top-6 text-[10rem] leading-none opacity-30"
+          {fotos.length > 0 ? (
+            <div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={photoUrl(fotos[0])}
+                alt={l.title}
+                className="h-64 w-full rounded-xl object-cover"
+              />
+              {fotos.length > 1 && (
+                <div className="mt-2 grid grid-cols-4 gap-2">
+                  {fotos.slice(1).map((p) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      key={p}
+                      src={photoUrl(p)}
+                      alt=""
+                      className="h-20 w-full rounded-lg object-cover"
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div
+              className={`relative flex h-56 items-end overflow-hidden rounded-xl p-5 ${c.band}`}
             >
-              {c.emoji}
-            </span>
-            <span className="relative z-10 rounded bg-black/35 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
-              {cat?.name_es ?? "Ganado"}
-            </span>
-          </div>
+              <span
+                aria-hidden
+                className="absolute -right-4 -top-6 text-[10rem] leading-none opacity-30"
+              >
+                {c.emoji}
+              </span>
+              <span className="relative z-10 rounded bg-black/35 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
+                {cat?.name_es ?? "Ganado"}
+              </span>
+            </div>
+          )}
 
           <h1 className="mt-6 font-display text-4xl font-bold leading-tight text-pasto-hondo">
             {l.title}

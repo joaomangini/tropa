@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
-import { precioTexto, catStyle } from "@/lib/format";
+import { precioTexto, catStyle, photoUrl } from "@/lib/format";
 
 type Card = {
   id: string;
@@ -14,6 +14,7 @@ type Card = {
   precio: string;
   ciudad: string | null;
   departamento: string | null;
+  foto: string | null;
 };
 
 type HomeData = {
@@ -48,7 +49,7 @@ async function getHomeData(): Promise<HomeData> {
       supabase
         .from("listings")
         .select(
-          "id, title, head_count, avg_weight_kg, avg_age_months, price, price_type, currency, city, department, categories(slug,name_es), breeds(name)"
+          "id, title, head_count, avg_weight_kg, avg_age_months, price, price_type, currency, city, department, categories(slug,name_es), breeds(name), listing_photos(storage_path,sort_order)"
         )
         .eq("status", "ativo")
         .eq("moderation", "aprovado")
@@ -60,6 +61,10 @@ async function getHomeData(): Promise<HomeData> {
     const listings: Card[] = raw.map((l) => {
       const cat = Array.isArray(l.categories) ? l.categories[0] : l.categories;
       const br = Array.isArray(l.breeds) ? l.breeds[0] : l.breeds;
+      const fotos = Array.isArray(l.listing_photos) ? l.listing_photos : [];
+      const primera = [...fotos].sort(
+        (a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+      )[0];
       return {
         id: String(l.id),
         title: String(l.title),
@@ -72,6 +77,7 @@ async function getHomeData(): Promise<HomeData> {
         precio: precioTexto(l.price, l.price_type, l.currency),
         ciudad: l.city ?? null,
         departamento: l.department ?? null,
+        foto: primera ? (primera.storage_path as string) : null,
       };
     });
 
@@ -180,16 +186,24 @@ export default async function Home() {
                   href={`/animal/${l.id}`}
                   className="flex flex-col overflow-hidden rounded-lg border border-crema-2 bg-white transition-shadow hover:shadow-md"
                 >
-                  <div
-                    className={`relative flex h-24 items-end p-3 ${c.band}`}
-                  >
-                    <span
-                      aria-hidden
-                      className="absolute -top-1 right-2 text-6xl opacity-30"
-                    >
-                      {c.emoji}
-                    </span>
-                    <span className="relative z-10 rounded bg-black/35 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
+                  <div className="relative h-24">
+                    {l.foto ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={photoUrl(l.foto)}
+                        alt={l.title}
+                        className="h-24 w-full object-cover"
+                      />
+                    ) : (
+                      <div
+                        className={`flex h-24 items-center justify-end ${c.band}`}
+                      >
+                        <span aria-hidden className="mr-2 text-6xl opacity-30">
+                          {c.emoji}
+                        </span>
+                      </div>
+                    )}
+                    <span className="absolute bottom-2 left-2 z-10 rounded bg-black/45 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
                       {l.categoria}
                     </span>
                   </div>
