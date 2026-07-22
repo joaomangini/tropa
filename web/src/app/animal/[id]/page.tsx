@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
-import { precioTexto, catStyle, photoUrl } from "@/lib/format";
+import { precioTexto, catStyle } from "@/lib/format";
 import WhatsappButton from "@/components/WhatsappButton";
 import RegisterSaleForm from "@/components/RegisterSaleForm";
+import Gallery from "@/components/Gallery";
 
 export default async function AnimalPage({
   params,
@@ -87,27 +88,7 @@ export default async function AnimalPage({
         {/* Coluna esquerda: "foto" + dados */}
         <div>
           {fotos.length > 0 ? (
-            <div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={photoUrl(fotos[0])}
-                alt={l.title}
-                className="h-64 w-full rounded-xl object-cover"
-              />
-              {fotos.length > 1 && (
-                <div className="mt-2 grid grid-cols-4 gap-2">
-                  {fotos.slice(1).map((p) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      key={p}
-                      src={photoUrl(p)}
-                      alt=""
-                      className="h-20 w-full rounded-lg object-cover"
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+            <Gallery fotos={fotos} alt={l.title} />
           ) : (
             <div
               className={`relative flex h-56 items-end overflow-hidden rounded-xl p-5 ${c.band}`}
