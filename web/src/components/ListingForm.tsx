@@ -51,12 +51,13 @@ async function compressImage(file: File): Promise<Blob> {
   );
 }
 
+// Retorna null em caso de sucesso, ou a mensagem do primeiro erro.
 async function uploadPhotos(
   supabase: ReturnType<typeof createClient>,
   userId: string,
   listingId: string,
   files: File[]
-) {
+): Promise<string | null> {
   for (let i = 0; i < files.length; i++) {
     let blob: Blob = files[i];
     let ext = "jpg";
@@ -67,15 +68,16 @@ async function uploadPhotos(
       ext = files[i].name.split(".").pop() || "jpg";
     }
     const path = `${userId}/${listingId}/${Date.now()}-${i}.${ext}`;
-    const { error } = await supabase.storage
+    const { error: upErr } = await supabase.storage
       .from("listing-photos")
       .upload(path, blob, { contentType: blob.type || "image/jpeg" });
-    if (!error) {
-      await supabase
-        .from("listing_photos")
-        .insert({ listing_id: listingId, storage_path: path, sort_order: i });
-    }
+    if (upErr) return upErr.message;
+    const { error: dbErr } = await supabase
+      .from("listing_photos")
+      .insert({ listing_id: listingId, storage_path: path, sort_order: i });
+    if (dbErr) return dbErr.message;
   }
+  return null;
 }
 
 export default function ListingForm({
@@ -153,7 +155,14 @@ export default function ListingForm({
         setError("No se pudieron guardar los cambios.");
         return;
       }
-      if (files.length) await uploadPhotos(supabase, user.id, initial.id, files);
+      if (files.length) {
+        const upErr = await uploadPhotos(supabase, user.id, initial.id, files);
+        if (upErr) {
+          setLoading(false);
+          setError(`Se guardaron los cambios, pero las fotos fallaron: ${upErr}`);
+          return;
+        }
+      }
       setLoading(false);
       router.push(`/animal/${initial.id}`);
       router.refresh();
@@ -181,7 +190,16 @@ export default function ListingForm({
       );
       return;
     }
-    if (files.length) await uploadPhotos(supabase, user.id, data.id, files);
+    if (files.length) {
+      const upErr = await uploadPhotos(supabase, user.id, data.id, files);
+      if (upErr) {
+        setLoading(false);
+        setError(
+          `El aviso se publicó (lo ves en Mis avisos), pero las fotos fallaron: ${upErr}`
+        );
+        return;
+      }
+    }
     setLoading(false);
     router.push(`/animal/${data.id}`);
     router.refresh();
