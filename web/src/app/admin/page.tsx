@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import AdvertiserForm from "@/components/admin/AdvertiserForm";
 import CampaignForm from "@/components/admin/CampaignForm";
+import CampaignActions from "@/components/admin/CampaignActions";
 
 const POS_LABEL: Record<string, string> = {
   home_top: "Topo da home",
@@ -122,7 +123,8 @@ export default async function Admin() {
               <th className="pr-3">Posición</th>
               <th className="pr-3">Estado</th>
               <th className="pr-3 text-right">Impresiones</th>
-              <th className="text-right">Clics</th>
+              <th className="pr-3 text-right">Clics</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -138,13 +140,16 @@ export default async function Admin() {
                   <td className="pr-3">{POS_LABEL[c.position] ?? c.position}</td>
                   <td className="pr-3">{c.is_active ? "Activa" : "Inactiva"}</td>
                   <td className="pr-3 text-right tabular-nums">{m.imp}</td>
-                  <td className="text-right tabular-nums">{m.clk}</td>
+                  <td className="pr-3 text-right tabular-nums">{m.clk}</td>
+                  <td className="py-2">
+                    <CampaignActions id={c.id} isActive={c.is_active} />
+                  </td>
                 </tr>
               );
             })}
             {campaigns.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-4 text-humo">
+                <td colSpan={7} className="py-4 text-humo">
                   Todavía no hay campañas.
                 </td>
               </tr>
