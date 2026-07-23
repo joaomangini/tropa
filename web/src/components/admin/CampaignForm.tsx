@@ -11,6 +11,7 @@ const inputCls =
 
 const POSICIONES = [
   { v: "home_top", l: "Topo da home" },
+  { v: "home_showcase", l: "Fila de patrocinadores (home)" },
   { v: "feed_inline", l: "Dentro do feed" },
   { v: "search_sidebar", l: "Lateral da busca" },
   { v: "detail_footer", l: "Rodapé do detalhe" },

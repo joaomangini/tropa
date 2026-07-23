@@ -4,6 +4,7 @@ import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { precioTexto, catStyle, photoUrl } from "@/lib/format";
 import { getActiveBanners } from "@/lib/banners";
 import BannerCarousel from "@/components/banner/BannerCarousel";
+import SponsorRow from "@/components/banner/SponsorRow";
 
 type Card = {
   id: string;
@@ -102,6 +103,7 @@ export default async function Home() {
   const data = await getHomeData();
   const bannersTop = await getActiveBanners("home_top");
   const bannersFeed = await getActiveBanners("feed_inline");
+  const sponsors = await getActiveBanners("home_showcase");
 
   return (
     <>
@@ -261,6 +263,8 @@ export default async function Home() {
           </div>
         )}
       </section>
+
+      {sponsors.length > 0 && <SponsorRow banners={sponsors} />}
 
       {/* CÓMO FUNCIONA */}
       <section id="como-funciona" className="bg-crema-2/50">

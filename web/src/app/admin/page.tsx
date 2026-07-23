@@ -6,6 +6,7 @@ import CampaignActions from "@/components/admin/CampaignActions";
 
 const POS_LABEL: Record<string, string> = {
   home_top: "Topo da home",
+  home_showcase: "Fila de patrocinadores",
   feed_inline: "Dentro do feed",
   search_sidebar: "Lateral da busca",
   detail_footer: "Rodapé do detalhe",
