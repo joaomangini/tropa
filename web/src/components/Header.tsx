@@ -5,8 +5,8 @@ import CartButton from "./cart/CartButton";
 
 const nav = [
   { label: "Animales", href: "/#animales" },
+  { label: "Buscar", href: "/buscar" },
   { label: "Cómo funciona", href: "/#como-funciona" },
-  { label: "Razas", href: "/#razas" },
 ];
 
 export default async function Header() {
