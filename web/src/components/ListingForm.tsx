@@ -177,7 +177,7 @@ export default function ListingForm({
         ...campos,
         seller_id: user.id,
         status: "ativo",
-        moderation: "aprovado",
+        moderation: "pendente",
         published_at: ahora.toISOString(),
         expires_at: expira.toISOString(),
       })

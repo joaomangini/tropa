@@ -6,6 +6,7 @@ import WhatsappButton from "@/components/WhatsappButton";
 import RegisterSaleForm from "@/components/RegisterSaleForm";
 import Gallery from "@/components/Gallery";
 import AddToCartButton from "@/components/cart/AddToCartButton";
+import ReportButton from "@/components/ReportButton";
 import { getActiveBanners } from "@/lib/banners";
 import BannerCarousel from "@/components/banner/BannerCarousel";
 
@@ -186,6 +187,9 @@ export default async function AnimalPage({
             <p className="mt-3 text-center text-xs text-humo">
               El contacto es directo entre comprador y vendedor.
             </p>
+            <div className="mt-3 text-center">
+              <ReportButton listingId={l.id} />
+            </div>
           </div>
         </aside>
       </div>

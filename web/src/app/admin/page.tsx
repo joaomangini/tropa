@@ -1,8 +1,11 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import AdvertiserForm from "@/components/admin/AdvertiserForm";
 import CampaignForm from "@/components/admin/CampaignForm";
 import CampaignActions from "@/components/admin/CampaignActions";
+import ModerationActions from "@/components/admin/ModerationActions";
+import ReportActions from "@/components/admin/ReportActions";
 
 const POS_LABEL: Record<string, string> = {
   home_top: "Topo da home",
@@ -65,12 +68,121 @@ export default async function Admin() {
     return { imp, clk };
   }
 
+  const [pendRes, repRes, activosRes, usuariosRes, contactosRes] =
+    await Promise.all([
+      supabase
+        .from("listings")
+        .select(
+          "id, title, seller_id, created_at, profiles!listings_seller_id_fkey(full_name)"
+        )
+        .eq("moderation", "pendente")
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("reports")
+        .select("id, reason, description, listing_id, listings(title)")
+        .eq("status", "pendente")
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("listings")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "ativo")
+        .eq("moderation", "aprovado"),
+      supabase.from("profiles").select("*", { count: "exact", head: true }),
+      supabase.from("contact_events").select("*", { count: "exact", head: true }),
+    ]);
+
+  const pendientes = (pendRes.data ?? []) as any[];
+  const denuncias = (repRes.data ?? []) as any[];
+  const totalActivos = activosRes.count ?? 0;
+  const totalUsuarios = usuariosRes.count ?? 0;
+  const totalContactos = contactosRes.count ?? 0;
+
   return (
     <section className="mx-auto max-w-5xl px-5 py-12">
       <h1 className="font-display text-4xl font-bold text-pasto-hondo">
-        Panel de anuncios
+        Panel de administración
       </h1>
-      <p className="mt-2 text-humo">
+
+      {/* Dashboard */}
+      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <StatBox n={totalActivos} label="Avisos activos" />
+        <StatBox n={pendientes.length} label="Pendientes" />
+        <StatBox n={totalUsuarios} label="Usuarios" />
+        <StatBox n={totalContactos} label="Clics de contacto" />
+      </div>
+
+      {/* Moderación de avisos */}
+      <h2 className="mt-12 font-display text-2xl font-bold text-pasto-hondo">
+        Avisos pendientes de aprobación
+      </h2>
+      {pendientes.length === 0 ? (
+        <p className="mt-2 text-humo">No hay avisos pendientes. 🎉</p>
+      ) : (
+        <div className="mt-4 flex flex-col gap-3">
+          {pendientes.map((p) => {
+            const sel = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles;
+            return (
+              <div
+                key={p.id}
+                className="rounded-lg border border-crema-2 bg-white p-4"
+              >
+                <Link
+                  href={`/animal/${p.id}`}
+                  className="font-semibold text-tinta hover:text-pasto"
+                >
+                  {p.title}
+                </Link>
+                <div className="text-xs text-humo">
+                  Vendedor: {sel?.full_name ?? "—"}
+                </div>
+                <div className="mt-3 border-t border-crema-2 pt-3">
+                  <ModerationActions id={p.id} sellerId={p.seller_id} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Denuncias */}
+      <h2 className="mt-12 font-display text-2xl font-bold text-pasto-hondo">
+        Denuncias
+      </h2>
+      {denuncias.length === 0 ? (
+        <p className="mt-2 text-humo">No hay denuncias pendientes.</p>
+      ) : (
+        <div className="mt-4 flex flex-col gap-3">
+          {denuncias.map((d) => {
+            const lst = Array.isArray(d.listings) ? d.listings[0] : d.listings;
+            return (
+              <div
+                key={d.id}
+                className="rounded-lg border border-crema-2 bg-white p-4"
+              >
+                <Link
+                  href={`/animal/${d.listing_id}`}
+                  className="font-semibold text-tinta hover:text-pasto"
+                >
+                  {lst?.title ?? "Aviso"}
+                </Link>
+                <div className="text-sm text-tinta">Motivo: {d.reason}</div>
+                {d.description && (
+                  <div className="text-xs text-humo">{d.description}</div>
+                )}
+                <div className="mt-3 border-t border-crema-2 pt-3">
+                  <ReportActions id={d.id} listingId={d.listing_id} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Publicidad */}
+      <h2 className="mt-14 font-display text-2xl font-bold text-pasto-hondo">
+        Anuncios pagos
+      </h2>
+      <p className="mt-1 text-humo">
         Registrá anunciantes, subí banners y mirá las métricas.
       </p>
 
@@ -159,5 +271,16 @@ export default async function Admin() {
         </table>
       </div>
     </section>
+  );
+}
+
+function StatBox({ n, label }: { n: number; label: string }) {
+  return (
+    <div className="rounded-lg border border-crema-2 bg-white px-4 py-4 text-center">
+      <div className="font-display text-3xl font-bold tabular-nums text-pasto">
+        {n}
+      </div>
+      <div className="mt-1 text-xs text-humo">{label}</div>
+    </div>
   );
 }

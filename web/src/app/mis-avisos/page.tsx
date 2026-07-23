@@ -23,7 +23,7 @@ export default async function MisAvisos() {
 
   const { data } = await supabase
     .from("listings")
-    .select("id, title, head_count, price, price_type, currency, status")
+    .select("id, title, head_count, price, price_type, currency, status, moderation")
     .eq("seller_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -74,6 +74,16 @@ export default async function MisAvisos() {
                       >
                         {st.label}
                       </span>
+                      {a.moderation === "pendente" && (
+                        <span className="rounded bg-ambar/20 px-2 py-0.5 text-xs font-semibold text-ambar">
+                          Pendiente de aprobación
+                        </span>
+                      )}
+                      {a.moderation === "reprovado" && (
+                        <span className="rounded bg-tierra/15 px-2 py-0.5 text-xs font-semibold text-tierra">
+                          Rechazado
+                        </span>
+                      )}
                     </div>
                     <div className="mt-1 text-sm text-humo">
                       {a.head_count} cabezas ·{" "}
