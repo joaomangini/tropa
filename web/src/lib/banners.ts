@@ -27,3 +27,28 @@ export async function getActiveBanner(position: string): Promise<Banner | null> 
     return null;
   }
 }
+
+/** Busca todas as campanhas ativas e vigentes de uma posição (para carrossel). */
+export async function getActiveBanners(
+  position: string,
+  limit = 8
+): Promise<Banner[]> {
+  if (!isSupabaseConfigured()) return [];
+  try {
+    const supabase = createClient();
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+      .from("banner_campaigns")
+      .select("id, image_path, link_url")
+      .eq("position", position)
+      .eq("is_active", true)
+      .lte("starts_at", now)
+      .or(`ends_at.is.null,ends_at.gt.${now}`)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (error || !data) return [];
+    return data as Banner[];
+  } catch {
+    return [];
+  }
+}

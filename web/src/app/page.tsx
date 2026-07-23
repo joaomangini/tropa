@@ -2,8 +2,8 @@ import { Fragment } from "react";
 import Link from "next/link";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { precioTexto, catStyle, photoUrl } from "@/lib/format";
-import { getActiveBanner } from "@/lib/banners";
-import BannerSlot from "@/components/banner/BannerSlot";
+import { getActiveBanners } from "@/lib/banners";
+import BannerCarousel from "@/components/banner/BannerCarousel";
 
 type Card = {
   id: string;
@@ -100,8 +100,8 @@ async function getHomeData(): Promise<HomeData> {
 
 export default async function Home() {
   const data = await getHomeData();
-  const banner = await getActiveBanner("home_top");
-  const bannerFeed = await getActiveBanner("feed_inline");
+  const bannersTop = await getActiveBanners("home_top");
+  const bannersFeed = await getActiveBanners("feed_inline");
 
   return (
     <>
@@ -159,9 +159,9 @@ export default async function Home() {
         )}
       </section>
 
-      {banner && (
+      {bannersTop.length > 0 && (
         <div className="mx-auto max-w-6xl px-5">
-          <BannerSlot campaign={banner} />
+          <BannerCarousel banners={bannersTop} />
         </div>
       )}
 
@@ -250,9 +250,9 @@ export default async function Home() {
                     )}
                   </div>
                 </Link>
-                {bannerFeed && (i + 1) % 6 === 0 && (
+                {bannersFeed.length > 0 && (i + 1) % 6 === 0 && (
                   <div className="col-span-full">
-                    <BannerSlot campaign={bannerFeed} />
+                    <BannerCarousel banners={bannersFeed} />
                   </div>
                 )}
                 </Fragment>
