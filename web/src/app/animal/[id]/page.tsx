@@ -1,7 +1,8 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
-import { precioTexto, catStyle } from "@/lib/format";
+import { precioTexto, catStyle, photoUrl } from "@/lib/format";
 import WhatsappButton from "@/components/WhatsappButton";
 import RegisterSaleForm from "@/components/RegisterSaleForm";
 import Gallery from "@/components/Gallery";
@@ -9,6 +10,44 @@ import AddToCartButton from "@/components/cart/AddToCartButton";
 import ReportButton from "@/components/ReportButton";
 import { getActiveBanners } from "@/lib/banners";
 import BannerCarousel from "@/components/banner/BannerCarousel";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
+  if (!isSupabaseConfigured()) return {};
+  try {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("listings")
+      .select(
+        "title, description, price, price_type, currency, listing_photos(storage_path,sort_order)"
+      )
+      .eq("id", params.id)
+      .maybeSingle();
+    if (!data) return { title: "Aviso no encontrado" };
+    const l = data as any;
+    const fotos = Array.isArray(l.listing_photos) ? l.listing_photos : [];
+    const primera = [...fotos].sort(
+      (a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+    )[0];
+    const desc =
+      l.description ||
+      `${precioTexto(l.price, l.price_type, l.currency)} — en Tropa, mercado de ganado en Paraguay.`;
+    return {
+      title: l.title,
+      description: desc,
+      openGraph: {
+        title: l.title,
+        description: desc,
+        images: primera ? [photoUrl(primera.storage_path)] : undefined,
+      },
+    };
+  } catch {
+    return {};
+  }
+}
 
 export default async function AnimalPage({
   params,

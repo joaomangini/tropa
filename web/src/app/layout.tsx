@@ -17,9 +17,21 @@ const body = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Tropa — Compra y venta de ganado en Paraguay",
+  metadataBase: new URL("https://tropa-joaomanginis-projects.vercel.app"),
+  title: {
+    default: "Tropa — Compra y venta de ganado en Paraguay",
+    template: "%s · Tropa",
+  },
   description:
     "Marketplace de ganado en Paraguay. Publicá tu lote o encontrá animales por raza, departamento y precio, y hablá directo por WhatsApp.",
+  openGraph: {
+    type: "website",
+    siteName: "Tropa",
+    locale: "es_PY",
+    title: "Tropa — Compra y venta de ganado en Paraguay",
+    description:
+      "Comprá y vendé ganado en Paraguay. Publicá tu lote o encontrá animales por raza, departamento y precio.",
+  },
 };
 
 export default function RootLayout({
